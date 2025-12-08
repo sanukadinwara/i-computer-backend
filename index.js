@@ -3,6 +3,7 @@ import mongoose from "mongoose"
 import userRouter from './router/userRouter.js'
 import productRouter from './router/productRouter.js'
 import authorizeUser from './lib/jwtMiddleware.js'
+import reviewRouter from './router/reviewRouter.js'
 
 const mongoURI = "mongodb+srv://admin:1234@cluster0.tibnjky.mongodb.net/my-collections?appName=Cluster0"
 
@@ -27,6 +28,8 @@ app.use(authorizeUser)
 app.use("/users", userRouter)
 
 app.use("/products", productRouter)
+
+app.use("/reviews" , reviewRouter)
 
 function start(){
     console.log("Server started on port 3000")

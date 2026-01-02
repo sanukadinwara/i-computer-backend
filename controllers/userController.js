@@ -1,6 +1,9 @@
 import User from "../models/user.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import dotenv from 'dotenv'
+
+dotenv.config()
 
 export function createUser(req, res) {
 	const hashedPassword = bcrypt.hashSync(req.body.password, 10);
@@ -15,10 +18,10 @@ export function createUser(req, res) {
 	user
 		.save()
 		.then(() => {
-			res.json({ message: "User created successfully" });
+			res.status(200).json({ message: "User created successfully" });
 		})
 		.catch((error) => {
-			res.json({ message: "Error creating user", error: error });
+			res.status(401).json({ message: "Error creating user", error: error });
 		});
 }
 
@@ -28,7 +31,7 @@ export function loginUser(req, res) {
 	})
 		.then((user) => {
 			if (user == null) {
-				res.json({
+				res.status(401).json({
 					message: "User with given email not found",
 				});
 			} else {
@@ -46,7 +49,7 @@ export function loginUser(req, res) {
 						role : user.role,
 						image : user.image,
 						isEmailVerified : user.isEmailVerified
-					} , "i-computers-54!")
+					} , process.env.JWT_SECRET)
 
 					console.log(token);
 
@@ -59,7 +62,7 @@ export function loginUser(req, res) {
 						isEmailVerified : user.isEmailVerified
 					});
 
-					res.json({
+					res.status(200).json({
 						message: "Login successfull",
 						token : token,
 					});

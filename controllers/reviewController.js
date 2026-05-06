@@ -1,44 +1,45 @@
 import Review from "../models/review.js";
 import { isAdmin } from "./userController.js";
+import User from "../models/user.js";
 
-export async function createReview(req , res) {
+export async function createReview(req, res) {
 
-    if(req.user == null){
-        res.status(401).json({
-            message : "Please login and try again"
-        })
+    if (req.user == null) {
+        return res.status(401).json({
+            message: "Please login and try again"
+        });
     }
 
-    try{
+    try {
+        const loggedInUser = await User.findOne({ email: req.user.email });
+
+        if (!loggedInUser) {
+            console.log("User not found for email:", req.user?.email);
+            return res.status(404).json({ message: "User not found" });
+        }
 
         const data = req.body;
 
-        const newReview = new Review(
-            {
-                reviewId : req.body.reviewId,
-                email : req.body.email,
-                name : req.user.firstName + " " + req.user.lastName,
-                rating : data.rating,
-                message : data.message,
-                image : req.user.image || ["/images/default-profile.png"]
-            }
-        )
-
-        await newReview.save();
-
-        res.status(200).json({
-            message : "Review added successfully"
+        const newReview = new Review({
+            reviewId: data.reviewId, 
+            productId: data.productId,
+            email: loggedInUser.email, 
+            name: loggedInUser.firstName + " " + loggedInUser.lastName,
+            rating: data.rating,
+            message: data.message || data.comment, 
+            images: data.images || [],
+            profilePicture: loggedInUser.image || "/images/default-profile.png"
         });
 
-    }catch(error){
+        await newReview.save();
+        res.status(200).json({ message: "Review added successfully" });
 
-        console.log("Review Error details" , error);
-
+    } catch (error) {
+        console.log("Review Error details", error);
         res.status(500).json({
-            message : "Error adding review" , error : error
-        })
+            message: "Error adding review", error: error
+        });
     }
-    
 }
 
 export async function getReview(req , res) {
@@ -57,31 +58,25 @@ export async function getReview(req , res) {
     
 }
 
-export async function deleteReview(req , res) {
-
-    if(!isAdmin(req)){
-        res.status(500).json({
-            message : "Access denied. Admins only"
-        })
-    }
-
-    try{
-
+export async function deleteReview(req, res) {
+    try {
         const reviewId = req.params.reviewId;
-        await Review.deleteOne({reviewId : reviewId});
-        res.status(200).json({
-            message : "Review deleted successfully"
-        })
+        const review = await Review.findOne({ reviewId: reviewId });
 
-    }catch(error){
+        if (!review) {
+            return res.status(404).json({ message: "Review not found" });
+        }
 
-        res.status(500).json({
-            message : "Error deleting review" , error : error
-        })
-        return;
+        if (isAdmin(req) || req.user.email === review.email) {
+            await Review.deleteOne({ reviewId: reviewId });
+            return res.status(200).json({ message: "Review deleted successfully" });
+        } else {
+            return res.status(403).json({ message: "Access denied. Unauthorized to delete this review" });
+        }
 
+    } catch (error) {
+        res.status(500).json({ message: "Error deleting review", error: error });
     }
-    
 }
 
 export async function updateReview(req , res) {
@@ -155,4 +150,14 @@ export async function getReviewById(req, res) {
         })
     }
 
+}
+
+export async function getReviewByProduct(req, res) {
+    try {
+        const productId = req.params.productId;
+        const reviews = await Review.find({ productId: productId });
+        res.status(200).json(reviews);
+    } catch (error) {
+        res.status(500).json({ message: "Error fetching reviews", error: error });
+    }
 }

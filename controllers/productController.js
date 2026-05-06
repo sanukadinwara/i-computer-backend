@@ -1,5 +1,6 @@
 import Product from "../models/product.js";
 import { isAdmin } from "./userController.js";
+import jwt from "jsonwebtoken";
 
 export async function createProduct(req , res){
 
@@ -45,9 +46,9 @@ export async function createProduct(req , res){
         }
 
         data.price = req.body.price;
-        data.labelledPrice = req.body.labelledPrice || req.body.price;
+        data.labeledPrice = req.body.labeledPrice || req.body.price;
         data.category = req.body.category || "Others"
-        data.images = req.body.images || ["/images/default-product-1.png","/images/default-product-2.png"]
+        data.image = req.body.image || ["/images/default-product-1.png" , "/images/default-product-2.png"];
         data.isVisible = req.body.isVisible
         data.brand = req.body.brand || "Generic"
         data.model = req.body.model || "Standard"
@@ -67,23 +68,35 @@ export async function createProduct(req , res){
     }
 }
 
-export async function getProducts(req , res) {
-    
-    try{
-        if(isAdmin(req)){
+export async function getProducts(req, res) {
+    try {
+        let isUserAdmin = false;
+
+        const token = req.header("Authorization")?.replace("Bearer ", "");
+
+        if (token) {
+            try {
+                const decoded = jwt.verify(token, process.env.JWT_SECRET);
+                if (decoded.role === "admin") {
+                    isUserAdmin = true; 
+                }
+            } catch (err) {
+            }
+        }
+
+        if (isUserAdmin) {
             const products = await Product.find();
             res.status(200).json(products);
-        }else{
-            const products = await Product.find({
-                isVisible : true
-            });
+        } else {
+            const products = await Product.find({ isVisible: true });
             res.status(200).json(products);
         }
-        
-    }catch(error){
+
+    } catch (error) {
         res.status(500).json({
-            message : "Error fetching products" , error : error
-        })
+            message: "Error fetching products",
+            error: error
+        });
     }
 }
 
@@ -141,9 +154,9 @@ export async function updateProduct(req , res) {
         }
 
         data.price = req.body.price;
-        data.labelledPrice = req.body.labelledPrice || req.body.price;
+        data.labeledPrice = req.body.labeledPrice || req.body.price;
         data.category = req.body.category || "Others"
-        data.images = req.body.images || ["/images/default-product-1.png","/images/default-product-2.png"]
+        data.image = req.body.image || ["/images/default-product-1.png","/images/default-product-2.png"]
         data.isVisible = req.body.isVisible
         data.brand = req.body.brand || "Generic"
         data.model = req.body.model || "Standard"
@@ -191,6 +204,34 @@ export async function getProductById(req , res) {
             message : "Error fetching product" , error : error
         })
 
+    }
+    
+}
+
+export async function searchProducts(req , res) {
+
+    const query = req.params?.query||"";
+
+    try{
+
+        const products = await Product.find(
+            {
+                $or : [
+                    {name : {$regex : query , $options : "i"}},
+                    {description : {$regex : query , $options : "i"}},
+                    {model : {$regex : query , $options : "i"}},
+                    {brand : {$regex : query , $options : "i"}},
+                    {altNames : {$elemMatch : {$regex : query , $options : "i"}}}
+                ] ,
+                isVisible : true
+            }
+        )
+
+        res.status(200).json(products);
+
+    }catch{
+
+        res.status(500).json({message : "Error searching products" , error : error});
     }
     
 }

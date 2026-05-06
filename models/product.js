@@ -28,8 +28,9 @@ const productSchema = new mongoose.Schema(
             required : true
         },
 
-        labelledPrice : {
-            type : Number
+        labeledPrice: { 
+            type: Number, 
+            default: 0 
         },
 
         category : {
@@ -37,9 +38,10 @@ const productSchema = new mongoose.Schema(
             default : "Others"
         },
 
-        images : {
-            type : [String],
-            default : ["/images/default-product-1.png","/images/default-product-2.png"]
+        image: {
+            type: [String], 
+            required: false,
+            default: []
         },
 
         isVisible : {
@@ -56,6 +58,11 @@ const productSchema = new mongoose.Schema(
         model : {
             type : String,
             default : "Standard"
+        },
+
+        qty : {
+            type : Number,
+            default : 100
         }
     }
 )

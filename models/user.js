@@ -36,9 +36,14 @@ const userSchema = new mongoose.Schema({
         required : true       
     },
 
+    blockedUntil: {
+        type: Date, 
+        default: null 
+    },
+
     isEmailVerified : {
         type : Boolean,
-        default : false,
+        default : true,
         required : true
     },
 

@@ -2,6 +2,11 @@ import mongoose from "mongoose";
 
 const reviewSchema = new mongoose.Schema(
     {
+        productId : {
+            type : String,
+            required : true 
+        },
+
         reviewId : {
             type : String,
             required : true,
@@ -18,10 +23,14 @@ const reviewSchema = new mongoose.Schema(
             required : true
         },
 
-        image : {
+        profilePicture : {
             type : String,
             default : "/images/default-profile.png"
         },
+
+        images : [{
+            type : String
+        }],
 
         rating : {
             type : Number,

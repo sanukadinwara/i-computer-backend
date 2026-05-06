@@ -1,14 +1,18 @@
 import express from "express";
-import { createProduct, deleteProduct, getProductById, getProducts, updateProduct } from "../controllers/productController.js";
+import { createProduct, deleteProduct, getProductById, getProducts, searchProducts, updateProduct } from "../controllers/productController.js";
+import authorizeUser from "../lib/jwtMiddleware.js"; 
 
 const productRouter = express.Router();
-productRouter.post("/" , createProduct);
+
+productRouter.post("/" , authorizeUser, createProduct); 
+
 productRouter.get("/" , getProducts);
-productRouter.get("/:trending" , (req , res)=>{
-    res.status(200).json({message : "This is trending products endpoint"})
-})
-productRouter.delete("/:productId" , deleteProduct); 
-productRouter.put("/:productId" , updateProduct);
+
+productRouter.get("/search/:query" , searchProducts);
+
+productRouter.delete("/:productId" , authorizeUser, deleteProduct); 
+productRouter.put("/:productId" , authorizeUser, updateProduct);
+
 productRouter.get("/:productId" , getProductById);
 
 export default productRouter;

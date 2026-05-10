@@ -13,7 +13,7 @@ const transporter = nodemailer.createTransport({
     port : 587,
     secure : false,
     auth : {
-        user : "velvetvoid45@gmail.com",
+        user : process.env.GMAIL_USER,
         pass : process.env.GMAIL_APP_PASSWORD
     }
 })
@@ -211,7 +211,7 @@ export async function sendOTP(req,res){
         await newOTP.save()
 
         const message = {
-            from : "velvetvoid45@gmail.com",
+            from : process.env.GMAIL_USER,
             to : req.body.email,
             subject : "Your OTP for password reset",
             text : "Your OTP for password reset is " +otp + ". It is valid for 10 minutes."
